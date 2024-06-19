@@ -1,8 +1,3 @@
-// Every piece of functionality should fit in one of 3 objects: 
-// game, player, gameboard
-
-// Don't forget to include logic that checks for when the game is over.
-
 /**
  * Tic Tac Toe
  * Store the gameboard as an array inside of a Gameboard object.
@@ -22,8 +17,7 @@ const Square = function () {
   // init value of square to empty 
   let value = 0;
 
-  
-  // Can call this like Square.addMarker(player1)?
+  // call this like board[n][n].addMarker(player1), will set value to 1 or 2 depending on player arg
   const addMarker = (player) => {
     value = player;
     };
@@ -51,16 +45,16 @@ const Gameboard = (function() {
   for (let i = 0; i < size; i++) {
     // create sub-array for each row
     board[i] = [];
+    // for every row, push an instance of Square
     for (let j = 0; j < size; j++) {
       board[i].push(Square()); 
     }
   }
-  console.log(board);
 
   // just returns current board array
   const getBoard = () => board;
 
-  // method to change square's value to 1 or 2?
+  // method to change square's value to 1 or 2
   const placeMarker = (row, col, player) => {
     // check if square is empty, if not just return
     // if empty, place marker arg
@@ -71,6 +65,7 @@ const Gameboard = (function() {
     if (!isSquareAvailable) return;
     // else the square IS available, so we can add the player's marker:
     board[row][col].addMarker(player);
+    console.log(board[row][col].getValue());
   };
 
   const printBoard = () => {
