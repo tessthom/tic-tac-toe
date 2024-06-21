@@ -51,21 +51,16 @@ const Gameboard = (function() {
     }
   }
 
-  // just returns current board array
   const getBoard = () => board;
+  // TODO: MAKE COPY OF INITIAL ARRAY SO YOURE NOT MODDING ORIG ARRAY CONSTANTLY
 
-  // method to change square's value to 1 or 2
+  const isSquareAvailable = (row, col) => !board[row][col].getValue();
+
   const placeMarker = (row, col, player) => {
-    // check if square is empty, if not just return
-    // if empty, place marker arg
-    const isSquareAvailable = !board[row][col].getValue();
-    console.log(`is the square available? ${isSquareAvailable}`);
-    console.log(`the value of board[${row}][${col}].getValue() is ${board[row][col].getValue()}`);
-    // if the square isn't available, exit fn
-    if (!isSquareAvailable) return;
-    // else the square IS available, so we can add the player's marker:
+    // TODO: After UI built, call a method from future UI handler to display red border flash or similar side effect if square is not empty.
+    if (!isSquareAvailable(row, col)) return;
+    // else add the player's marker:
     board[row][col].addMarker(player);
-    console.log(board[row][col].getValue());
   };
 
   const printBoard = () => {
@@ -77,11 +72,17 @@ const Gameboard = (function() {
     console.dir(boardWithValues);
   };
 
+  const resetBoard = () => {
+
+  }
+
   // Return object with fn to get board state, check for valid move, update board based on player moves:
   return {
+    size,
     getBoard,
     placeMarker,
     printBoard,
+    resetBoard,
   };
 })();
 
@@ -99,47 +100,72 @@ const GameController = (function(
     {
       name: playerOneName,
       marker: 1,
-      points: 0
+      score: 0
     },
     {
       name: playerTwoName,
       marker: 2,
-      points: 0
+      score: 0
     }
   ];
 
-  // init current player
   let currentPlayer = players[0];
 
-  // method to switch turns
   const switchTurns = () => {
     currentPlayer = currentPlayer === players[0] ? players[1] : players[0];
   };
 
-  // method to access currentPlayer from outside the FF
+
   const getCurrentPlayer = () => currentPlayer;
 
-  // method to call to start new round
+  const addPoint = () => currentPlayer.score += 1;
+
   const printNewRound = () => {
-    // ACCESS METHODS ON THE BOARD FROM THE GAMEBOARD OBJECT :)
     // print a new empty board
-    Gameboard.printBoard();
+    Gameboard.printBoard(); // TODO: THIS CURRENTLY JUST PRINTS BOARD AS IS, NEED TO RESET
     // alert player it's their turn
     console.log(`Okay ${getCurrentPlayer().name}, it's your turn.`);
   };
 
-  // method to play a round
-  const playRound = (col, row) => {
+  const checkForWinner = (row, col) => {
+    const currBoard = Gameboard.getBoard();
+    const targetValue = currBoard[row][col].getValue();
+
+    const checkRow = () => currBoard[row].every(cell => cell.getValue() === targetValue);
+
+    const checkCol = () => currBoard.every(row => row[col].getValue() === targetValue);
+    
+    const checkDiagonal = () => {
+      const size = currBoard.length;
+      const mainDiagonal = currBoard.map((row, index) => row[index].getValue());
+      const antiDiagonal = currBoard.map((row, index) => row[size - 1 - index].getValue());
+
+      const isMainDiagonalWin = mainDiagonal.every(square => square === targetValue);
+      const isAntiDiagonalWin = antiDiagonal.every(square => square === targetValue);
+
+      return isMainDiagonalWin || isAntiDiagonalWin;
+    }
+
+    return checkRow() || checkCol() || checkDiagonal();
+  }
+
+  const playRound = (row, col) => {
     // place marker for current player
-    console.log(`Placing ${getCurrentPlayer().name}'s marker, ${getCurrentPlayer().marker}, into the square at column ${col}, row ${row}...`);
-    Gameboard.placeMarker(col, row, getCurrentPlayer().marker);
+    console.log(`Placing ${getCurrentPlayer().name}'s marker, ${getCurrentPlayer().marker}, into the square at row ${row}, column ${col}...`);
+    Gameboard.placeMarker(row, col, getCurrentPlayer().marker);
 
-    /* This is where we'll check for a winner and handle that logic, like displaying a win message */
-
+    /* This is where will check for a winner and handle that logic, like displaying a win message */
+    if (checkForWinner(row, col)) {
+      console.log(`${getCurrentPlayer().name} wins!!!`);
+      // increment player's score
+      addPoint();
+      console.log(`Score: ${players[0].name}: ${players[0].score}. ${players[1].name}: ${players[1].score}`);
+      // reset board
+    };
     // switch turns
     switchTurns();
     // display blank board and empty board array
-    printNewRound();
+    printNewRound(); // TODO: this currently just prints the board as is!
   };
 
   // Initial play game message
@@ -153,6 +179,7 @@ const GameController = (function(
 
 // Test calls to insert vals at (row, col):
 GameController.playRound(0, 0);
-GameController.playRound(0, 1);
+GameController.playRound(1, 0);
+GameController.playRound(1, 1);
 GameController.playRound(1, 1);
 GameController.playRound(2, 2);
