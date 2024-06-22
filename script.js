@@ -38,48 +38,50 @@ const Square = function () {
  * Fn that prints board
  */
 const Gameboard = (function() {
-  const board = [];
+  const emptyBoard = [];
   const size = 3;
+  let currBoard = makeDeepCopy(emptyBoard);
 
   // Init board 
   for (let i = 0; i < size; i++) {
     // create sub-array for each row
-    board[i] = [];
+    emptyBoard[i] = [];
     // for every row, push an instance of Square
     for (let j = 0; j < size; j++) {
-      board[i].push(Square()); 
+      emptyBoard[i].push(Square()); 
     }
   }
 
-  const getBoard = () => board;
-  // TODO: MAKE COPY OF INITIAL ARRAY SO YOURE NOT MODDING ORIG ARRAY CONSTANTLY
+  function makeDeepCopy (arr) {
+    return arr.map(row => row.map(square => Square()));
+  }
+  
+  const resetBoard = () => {
+    currBoard = makeDeepCopy(emptyBoard);
+  };
+  
+  const getCurrBoard = () => currBoard;
 
-  const isSquareAvailable = (row, col) => !board[row][col].getValue();
+  const isSquareAvailable = (row, col) => !currBoard[row][col].getValue();
 
   const placeMarker = (row, col, player) => {
-    // TODO: After UI built, call a method from future UI handler to display red border flash or similar side effect if square is not empty.
-    if (!isSquareAvailable(row, col)) return;
-    // else add the player's marker:
-    board[row][col].addMarker(player);
+    currBoard[row][col].addMarker(player);
   };
 
   const printBoard = () => {
     // map over every row in the board...
-    const boardWithValues = board.map((row) => {
+    const boardWithValues = currBoard.map((row) => {
       // then map over every square in each row, and return the player value from each
       return row.map((square) => square.getValue());
     });
-    console.dir(boardWithValues);
+    console.dir(boardWithValues); // TODO: THIS IS WHAT IS INITIALLY PRINTING BOARD FOR CONSOLE VERSION. MAKE IT A CALL TO THE UI HANDLING ONCE BUILT
   };
-
-  const resetBoard = () => {
-
-  }
 
   // Return object with fn to get board state, check for valid move, update board based on player moves:
   return {
     size,
-    getBoard,
+    getCurrBoard,
+    isSquareAvailable,
     placeMarker,
     printBoard,
     resetBoard,
@@ -95,40 +97,44 @@ const GameController = (function(
   playerOneName = 'Player One', 
   playerTwoName = 'Player Two'
 ) {
-  // TODO: Reassess if best way to store player data, or make separate factory fn? If you do, need to refactor the way 
+  const createPlayer = (name, marker) => {
+    let score = 0; // private
+
+    return {
+      name,
+      marker,
+      getScore: () => score,
+      addPoint: () => { score += 1; },
+    };
+  }
+
   const players = [
-    {
-      name: playerOneName,
-      marker: 1,
-      score: 0
-    },
-    {
-      name: playerTwoName,
-      marker: 2,
-      score: 0
-    }
-  ];
+    createPlayer('Player One', 1),
+    createPlayer('Player Two', 2)
+  ]
 
   let currentPlayer = players[0];
 
   const switchTurns = () => {
     currentPlayer = currentPlayer === players[0] ? players[1] : players[0];
   };
-
+  // TODO: Move to future UI obj
+  const alertPlayerOfTurn = () => {
+    console.log(`It's ${getCurrentPlayer().name}'s turn.`);
+  };
 
   const getCurrentPlayer = () => currentPlayer;
 
-  const addPoint = () => currentPlayer.score += 1;
-
   const printNewRound = () => {
-    // print a new empty board
-    Gameboard.printBoard(); // TODO: THIS CURRENTLY JUST PRINTS BOARD AS IS, NEED TO RESET
+    Gameboard.resetBoard();
+    Gameboard.printBoard();
     // alert player it's their turn
-    console.log(`Okay ${getCurrentPlayer().name}, it's your turn.`);
+    // TODO: Move to future UI obj
+    console.log(`NEW ROUND: Okay ${getCurrentPlayer().name}, it's your turn.`);
   };
 
   const checkForWinner = (row, col) => {
-    const currBoard = Gameboard.getBoard();
+    const currBoard = Gameboard.getCurrBoard();
     const targetValue = currBoard[row][col].getValue();
 
     const checkRow = () => currBoard[row].every(cell => cell.getValue() === targetValue);
@@ -149,23 +155,42 @@ const GameController = (function(
     return checkRow() || checkCol() || checkDiagonal();
   }
 
-  const playRound = (row, col) => {
-    // place marker for current player
-    console.log(`Placing ${getCurrentPlayer().name}'s marker, ${getCurrentPlayer().marker}, into the square at row ${row}, column ${col}...`);
-    Gameboard.placeMarker(row, col, getCurrentPlayer().marker);
+  const checkForTie = () => {
+    const currBoard = Gameboard.getCurrBoard();
+    // flattened array makes it easier to iterate over values
+    return currBoard.flat().every(square => square.getValue() !== 0);
+  };
 
-    /* This is where will check for a winner and handle that logic, like displaying a win message */
-    if (checkForWinner(row, col)) {
-      console.log(`${getCurrentPlayer().name} wins!!!`);
-      // increment player's score
-      addPoint();
-      console.log(`Score: ${players[0].name}: ${players[0].score}. ${players[1].name}: ${players[1].score}`);
-      // reset board
-    };
-    // switch turns
-    switchTurns();
-    // display blank board and empty board array
-    printNewRound(); // TODO: this currently just prints the board as is!
+  const playRound = (row, col) => {
+    // place current player marker - updates value of square to 1 or 2, or returns if square unavailable
+    console.log(`Placing ${getCurrentPlayer().name}'s marker, ${getCurrentPlayer().marker}, into the square at row ${row}, column ${col}...`);
+    // if square available...
+    if (Gameboard.isSquareAvailable(row, col)) {
+      // place marker
+      Gameboard.placeMarker(row, col, getCurrentPlayer().marker);
+
+      // determine if play wins round
+      const isWinner = checkForWinner(row, col);
+      if (isWinner) {
+        console.log(`${getCurrentPlayer().name} wins!!!`);
+
+        getCurrentPlayer().addPoint();
+        console.log(`Score: ${players[0].name}: ${players[0].getScore()}. ${players[1].name}: ${players[1].getScore()}.`);
+
+        printNewRound();
+        return;
+      }
+      // If no winner yet...
+      else if (!isWinner) {
+        Gameboard.printBoard();
+        switchTurns();
+        alertPlayerOfTurn();
+      }
+    } else { // if square unavailable, log error, do not place marker or switch turns
+      // TODO: After UI built, call a method from future UI handler to display red border flash or similar side effect if square is not empty.
+      console.log(`Sorry, that square is already taken. Try again.`);
+      alertPlayerOfTurn();
+    }
   };
 
   // Initial play game message
@@ -173,7 +198,9 @@ const GameController = (function(
 
   return {
     getCurrentPlayer,
+    printNewRound,
     playRound,
+    checkForTie,
   };
 })();
 
@@ -181,5 +208,20 @@ const GameController = (function(
 GameController.playRound(0, 0);
 GameController.playRound(1, 0);
 GameController.playRound(1, 1);
-GameController.playRound(1, 1);
+// GameController.playRound(1, 1); // this is a check for trying an unavailable square
+GameController.playRound(1, 2);
 GameController.playRound(2, 2);
+
+/**
+ * Plays to a tie
+ */
+// GameController.playRound(0, 0);
+// GameController.playRound(0, 1);
+// GameController.playRound(1, 1);
+// GameController.playRound(0, 2);
+// GameController.playRound(1, 2);
+// GameController.playRound(1, 0);
+// GameController.playRound(2, 0);
+// GameController.playRound(2, 2);
+// GameController.playRound(2, 1);
+// console.log(GameController.checkForTie()); // true
