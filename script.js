@@ -119,6 +119,8 @@ const GameController = (function(
 
   const getCurrentPlayer = () => currentPlayer;
 
+  const getPlayerScores = () => [players[0].getScore(), players[1].getScore()];
+
   const updatePlayers = (name1, name2) => {
     players[0].name = name1;
     players[1].name = name2;
@@ -153,46 +155,73 @@ const GameController = (function(
   };
 
   const playRound = (row, col) => {
+    let gameState = {
+      isValidMove: Gameboard.isSquareAvailable(row, col),
+      isWinner: false,
+      isTie: false,
+      currentPlayer: getCurrentPlayer(),
+    };
+
     // if square available...
-    if (Gameboard.isSquareAvailable(row, col)) {
-      // place marker
-      Gameboard.placeMarker(row, col, getCurrentPlayer().marker);
+    if (gameState.isValidMove) {
+      // update marker
+      Gameboard.placeMarker(row, col, gameState.currentPlayer.marker);
 
-      // check for tie
-      const isTie = checkForTie(row, col);
-      if (isTie) {
-        GameUI.displayRoundResult(`It's a tie. No points no gods no masters.`);
-        setTimeout(Gameboard.resetBoard(), 2000);
-        return;
+      // check for winner or tie
+      gameState.isWinner = checkForWinner(row, col);
+      gameState.isTie = checkForTie();
+
+      if (gameState.isWinner) { 
+        gameState.currentPlayer.addPoint(); 
       }
 
-      // check for win
-      const isWinner = checkForWinner(row, col);
-      if (isWinner) {
-        console.log(`${getCurrentPlayer().name} wins!!!`);
-        
-        GameUI.displayRoundResult(`${getCurrentPlayer().name} wins!!!`);
-          
-        getCurrentPlayer().addPoint();
-        // delay for UI score update to coincide with banner slide-out
-        setTimeout(() => {
-            GameUI.updatePlayerScores(players[0].getScore(), players[1].getScore());
-            Gameboard.resetBoard();
-            GameUI.updateScreen();
-        }, 3000);
-
-        return;
-      }
-      // If no winner yet...
-      else if (!isWinner) {
+      if (!gameState.isWinner && !gameState.isTie) {
         switchTurns();
-        // alertPlayerOfTurn();
+        gameState.currentPlayer = getCurrentPlayer();
       }
-    } else { // if square unavailable, log error, do not place marker or switch turns
-      // TODO: After UI built, call a method from future UI handler to display red border flash or similar side effect if square is not empty.
-      console.log(`Sorry, that square is already taken. Try again.`);
-      // alertPlayerOfTurn();
     }
+
+    return gameState;
+
+    // if (Gameboard.isSquareAvailable(row, col)) {
+    //   // place marker
+    //   Gameboard.placeMarker(row, col, getCurrentPlayer().marker);
+
+    //   // check for tie
+    //   const isTie = checkForTie(row, col);
+    //   if (isTie) {
+    //     GameUI.displayRoundResult(`It's a tie. No points no gods no masters.`);
+    //     setTimeout(Gameboard.resetBoard(), 2000);
+    //     return;
+    //   }
+
+    //   // check for win
+    //   const isWinner = checkForWinner(row, col);
+    //   if (isWinner) {
+    //     console.log(`${getCurrentPlayer().name} wins!!!`);
+        
+    //     GameUI.displayRoundResult(`${getCurrentPlayer().name} wins!!!`);
+          
+    //     getCurrentPlayer().addPoint();
+    //     // delay for UI score update to coincide with banner slide-out
+    //     setTimeout(() => {
+    //         GameUI.updatePlayerScores(players[0].getScore(), players[1].getScore());
+    //         Gameboard.resetBoard();
+    //         GameUI.updateScreen();
+    //     }, 3000);
+
+    //     return;
+    //   }
+    //   // If no winner yet...
+    //   else if (!isWinner) {
+    //     switchTurns();
+    //     // alertPlayerOfTurn();
+    //   }
+    // } else { // if square unavailable, log error, do not place marker or switch turns
+    //   // TODO: After UI built, call a method from future UI handler to display red border flash or similar side effect if square is not empty.
+    //   console.log(`Sorry, that square is already taken. Try again.`);
+    //   // alertPlayerOfTurn();
+    // }
   };
 
   // Initial board render
@@ -200,6 +229,7 @@ const GameController = (function(
 
   return {
     getCurrentPlayer,
+    getPlayerScores,
     updatePlayers,
     checkForWinner,
     checkForTie,
@@ -272,9 +302,15 @@ const GameUI = (function() {
     const board = Gameboard.getBoardState();
     const currentPlayer = GameController.getCurrentPlayer();
 
-    // Display player's turn
-    const currentPlayerSpan = document.querySelector('.current-player');
-    currentPlayerSpan.textContent = `${currentPlayer.name}`;
+    // Display player's turn indicator
+    console.log(`current player's marker is: ${currentPlayer.marker}`);
+    if (currentPlayer.marker === 1) {
+      document.querySelector('.player-one-indicator').classList.add('show');
+      document.querySelector('.player-two-indicator').classList.remove('show');
+    } else {
+      document.querySelector('.player-two-indicator').classList.add('show');
+      document.querySelector('.player-one-indicator').classList.remove('show');
+    }
 
     // Render board squares
     board.forEach((row, index) => {
@@ -316,19 +352,41 @@ const GameUI = (function() {
     // check that col was clicked and not gap between col: 
     if (!selectedCol) return;
 
-    GameController.playRound(+selectedRow, +selectedCol);
+    const gameState = GameController.playRound(+selectedRow, +selectedCol);
+
+    if (gameState.isValidMove) {
+      updateScreen();
+      if (gameState.isWinner) {
+        // displayWinnerMessage(gameState.currentPlayer);
+        displayRoundResult(`${gameState.currentPlayer.name} wins!!!`);
+        // delay for score update + board reset v slider timing
+        setTimeout(() => {
+          updatePlayerScores(GameController.getPlayerScores()[0], GameController.getPlayerScores()[1]);
+          Gameboard.resetBoard();
+          updateScreen();
+        }, 2000);
+
+        return;
+      } else if (gameState.isTie) {
+        // displayTieMessage();
+        displayRoundResult(`It's a tie. No points no gods no masters.`);
+        // delay for reset v slider timing
+        setTimeout(() => {
+          Gameboard.resetBoard();
+          updateScreen();
+        }, 2000);
+        return;
+      } 
+    }
+
     updateScreen();
   }
 
   // Add event listener to board DOM element and pass handleBoard to it
   boardDiv.addEventListener('click', handleBoard);
 
-  // Display title screen
-
   // Get name inputs and update Controller with them
   document.querySelector('.title-screen-form').addEventListener('submit', handleNameSubmit);
-  // Initial render
-  // updateScreen();
 
   return {
     updatePlayerScores,

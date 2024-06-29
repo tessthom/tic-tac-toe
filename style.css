@@ -326,6 +326,7 @@ button.start-game {
 
   display: flex;
   flex-direction: column;
+  gap: 1rem;
 
   background-attachment: scroll;
   background-color: var(--midnight-blue);
@@ -354,11 +355,11 @@ h2 {
     0 0 150px var(--pink-dark);
 }
 .score-container {
+  padding: 1em 0 2em;
   width: 100%;
   display: flex;
   flex-direction: column;
-
-  border: 1px solid red;
+  gap: 1em;
 }
 .score-heading {
   font-size: 2.5rem;
@@ -368,11 +369,12 @@ h2 {
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 2em;
+  gap: 6em;
 }
 .player-one-para,
 .player-two-para {
-  font-size: 1.5rem;
+  font-size: 1.75rem;
+  position: relative;
 }
 .score-heading, 
 .player-one-para,
@@ -388,11 +390,23 @@ h2 {
     0 0 100px var(--pink-dark),
     0 0 150px var(--pink-dark);
 }
+.player-one-indicator,
+.player-two-indicator {
+  position: absolute;
+  left: -1em;
+  bottom: -0.1em;
+  font-size: 1.75em;
+  display: none;
+}
+.player-one-indicator.show,
+.player-two-indicator.show {
+  display: block;
+}
 
 /* Board */
 .board {
-  margin: 0 auto;
-  width: min(90%, 480px);
+  margin: 1.5rem auto;
+  width: min(90%, 450px);
 
   position: relative;
 }
@@ -407,7 +421,6 @@ h2 {
 }
 .board-row[data-row="0"],
 .board-row[data-row="1"] {
-  /* border-bottom: 4px solid orange; */
 
   &::before {
     content: '';
@@ -429,13 +442,12 @@ h2 {
   }
 }
 .cell[data-col="0"] {
-  /* border-right: 4px solid orange; */
 
   &::after {
     content: '';
     position: absolute;
     top: 0;
-    left: min((90vw / 3), 156px);
+    left: min((90vw / 3), 146px);
     height: 100%;
     width: 6px;
     border-radius: 3px;
@@ -455,7 +467,7 @@ h2 {
     content: '';
     position: absolute;
     top: 0;
-    left: min((90vw / 3) * 2, 320px);
+    left: min((90vw / 3) * 2, 300px);
     height: 100%;
     width: 6px;
     border-radius: 3px;
@@ -470,18 +482,9 @@ h2 {
       0 0 64px var(--neon-blue);
   }
 }
-/* .cell[data-col="1"]::after {
-  content: '';
-    position: absolute;
-    top: 0;
-    left: min((90vw / 3), 175px);
-    height: 100%;
-    width: 4px;
-    background-color: var(--neon-green);
-} */
 .cell {
   width: 33%;
-  height: min((90vw / 3), 160px);
+  height: min((90vw / 3), 150px);
   font-size: calc(90vw / 10);
   font-weight: 300;
   background-color: transparent;
