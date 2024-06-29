@@ -68,15 +68,6 @@ const Gameboard = (function() {
     currBoard[row][col].addMarker(player);
   };
 
-  // const printBoard = () => {
-  //   // map over every row in the board...
-  //   const boardWithValues = currBoard.map((row) => {
-  //     // then map over every square in each row, and return the player value from each
-  //     return row.map((square) => square.getValue());
-  //   });
-  //   console.dir(boardWithValues); 
-  // };
-
   return {
     getSize,
     getBoardState,
@@ -182,46 +173,6 @@ const GameController = (function(
     }
 
     return gameState;
-
-    // if (Gameboard.isSquareAvailable(row, col)) {
-    //   // place marker
-    //   Gameboard.placeMarker(row, col, getCurrentPlayer().marker);
-
-    //   // check for tie
-    //   const isTie = checkForTie(row, col);
-    //   if (isTie) {
-    //     GameUI.displayRoundResult(`It's a tie. No points no gods no masters.`);
-    //     setTimeout(Gameboard.resetBoard(), 2000);
-    //     return;
-    //   }
-
-    //   // check for win
-    //   const isWinner = checkForWinner(row, col);
-    //   if (isWinner) {
-    //     console.log(`${getCurrentPlayer().name} wins!!!`);
-        
-    //     GameUI.displayRoundResult(`${getCurrentPlayer().name} wins!!!`);
-          
-    //     getCurrentPlayer().addPoint();
-    //     // delay for UI score update to coincide with banner slide-out
-    //     setTimeout(() => {
-    //         GameUI.updatePlayerScores(players[0].getScore(), players[1].getScore());
-    //         Gameboard.resetBoard();
-    //         GameUI.updateScreen();
-    //     }, 3000);
-
-    //     return;
-    //   }
-    //   // If no winner yet...
-    //   else if (!isWinner) {
-    //     switchTurns();
-    //     // alertPlayerOfTurn();
-    //   }
-    // } else { // if square unavailable, log error, do not place marker or switch turns
-    //   // TODO: After UI built, call a method from future UI handler to display red border flash or similar side effect if square is not empty.
-    //   console.log(`Sorry, that square is already taken. Try again.`);
-    //   // alertPlayerOfTurn();
-    // }
   };
 
   // Initial board render
@@ -394,26 +345,3 @@ const GameUI = (function() {
     updateScreen,
   }
 })();
-
-
-// Test calls to insert vals at (row, col):
-// GameController.playRound(0, 0);
-// GameController.playRound(1, 0);
-// GameController.playRound(1, 1);
-// // GameController.playRound(1, 1); // this is a check for trying an unavailable square
-// GameController.playRound(1, 2);
-// GameController.playRound(2, 2);
-
-/**
- * Plays to a tie
- */
-// GameController.playRound(0, 0);
-// GameController.playRound(0, 1);
-// GameController.playRound(1, 1);
-// GameController.playRound(0, 2);
-// GameController.playRound(1, 2);
-// GameController.playRound(1, 0);
-// GameController.playRound(2, 0);
-// GameController.playRound(2, 2);
-// GameController.playRound(2, 1);
-// console.log(GameController.checkForTie()); // true
