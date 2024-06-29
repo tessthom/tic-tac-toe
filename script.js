@@ -1,13 +1,6 @@
 /**
- * Tic Tac Toe
- * Store the gameboard as an array inside of a Gameboard object.
- * Store players in objects.
- * Store flow control in a Game object.
- */
-
-/**
  * Factory Func for board squares 
- * Returns object with a method to get a value that will be one of:
+ * Returns object with a value that will be one of:
  * 0: square is empty
  * 1: playerOne
  * 2: playerTwo
@@ -16,6 +9,7 @@
 const Square = function () {
   // init value of square to empty 
   let value = 0;
+  let marker = '';
 
   // call this like board[n][n].addMarker(player1), will set value to 1 or 2 depending on player arg
   const addMarker = (player) => {
@@ -24,18 +18,22 @@ const Square = function () {
     
   const getValue = () => value;
 
+  const getMarker = () => {
+    if (value === 1) { marker = 'X' };
+    if (value === 2) { marker = 'O' };
+    return marker;
+  }
+
   return {
     addMarker,
     getValue,
+    getMarker,
   };
 }
 
 /**
  * Module for Gameboard
- * needs to store state of board
- * Fn to init board as array of object. Each el is instance of Square(), which returns an object that has 2 methods: 1 to change state of square, one to get value of square.
- * Fn that checks if square is empty, updates square if it is. Should take col, row, marker.
- * Fn that prints board
+ * Stores state of board
  */
 const Gameboard = (function() {
   const emptyBoard = [];
@@ -55,12 +53,14 @@ const Gameboard = (function() {
   function makeDeepCopy (arr) {
     return arr.map(row => row.map(square => Square()));
   }
-  
+
   const resetBoard = () => {
     currBoard = makeDeepCopy(emptyBoard);
-  };
+    };
+
+  const getSize = () => size;
   
-  const getCurrBoard = () => currBoard;
+  const getBoardState = () => currBoard;
 
   const isSquareAvailable = (row, col) => !currBoard[row][col].getValue();
 
@@ -68,22 +68,20 @@ const Gameboard = (function() {
     currBoard[row][col].addMarker(player);
   };
 
-  const printBoard = () => {
-    // map over every row in the board...
-    const boardWithValues = currBoard.map((row) => {
-      // then map over every square in each row, and return the player value from each
-      return row.map((square) => square.getValue());
-    });
-    console.dir(boardWithValues); // TODO: THIS IS WHAT IS INITIALLY PRINTING BOARD FOR CONSOLE VERSION. MAKE IT A CALL TO THE UI HANDLING ONCE BUILT
-  };
+  // const printBoard = () => {
+  //   // map over every row in the board...
+  //   const boardWithValues = currBoard.map((row) => {
+  //     // then map over every square in each row, and return the player value from each
+  //     return row.map((square) => square.getValue());
+  //   });
+  //   console.dir(boardWithValues); 
+  // };
 
-  // Return object with fn to get board state, check for valid move, update board based on player moves:
   return {
-    size,
-    getCurrBoard,
+    getSize,
+    getBoardState,
     isSquareAvailable,
     placeMarker,
-    printBoard,
     resetBoard,
   };
 })();
@@ -98,7 +96,7 @@ const GameController = (function(
   playerTwoName = 'Player Two'
 ) {
   const createPlayer = (name, marker) => {
-    let score = 0; // private
+    let score = 0;
 
     return {
       name,
@@ -118,23 +116,16 @@ const GameController = (function(
   const switchTurns = () => {
     currentPlayer = currentPlayer === players[0] ? players[1] : players[0];
   };
-  // TODO: Move to future UI obj
-  const alertPlayerOfTurn = () => {
-    console.log(`It's ${getCurrentPlayer().name}'s turn.`);
-  };
 
   const getCurrentPlayer = () => currentPlayer;
 
-  const printNewRound = () => {
-    Gameboard.resetBoard();
-    Gameboard.printBoard();
-    // alert player it's their turn
-    // TODO: Move to future UI obj
-    console.log(`NEW ROUND: Okay ${getCurrentPlayer().name}, it's your turn.`);
-  };
+  const updatePlayers = (name1, name2) => {
+    players[0].name = name1;
+    players[1].name = name2;
+  }
 
   const checkForWinner = (row, col) => {
-    const currBoard = Gameboard.getCurrBoard();
+    const currBoard = Gameboard.getBoardState();
     const targetValue = currBoard[row][col].getValue();
 
     const checkRow = () => currBoard[row].every(cell => cell.getValue() === targetValue);
@@ -156,61 +147,204 @@ const GameController = (function(
   }
 
   const checkForTie = () => {
-    const currBoard = Gameboard.getCurrBoard();
+    const currBoard = Gameboard.getBoardState();
     // flattened array makes it easier to iterate over values
     return currBoard.flat().every(square => square.getValue() !== 0);
   };
 
   const playRound = (row, col) => {
-    // place current player marker - updates value of square to 1 or 2, or returns if square unavailable
-    console.log(`Placing ${getCurrentPlayer().name}'s marker, ${getCurrentPlayer().marker}, into the square at row ${row}, column ${col}...`);
     // if square available...
     if (Gameboard.isSquareAvailable(row, col)) {
       // place marker
       Gameboard.placeMarker(row, col, getCurrentPlayer().marker);
 
-      // determine if play wins round
+      // check for tie
+      const isTie = checkForTie(row, col);
+      if (isTie) {
+        GameUI.displayRoundResult(`It's a tie. No points no gods no masters.`);
+        setTimeout(Gameboard.resetBoard(), 2000);
+        return;
+      }
+
+      // check for win
       const isWinner = checkForWinner(row, col);
       if (isWinner) {
         console.log(`${getCurrentPlayer().name} wins!!!`);
-
+        
+        GameUI.displayRoundResult(`${getCurrentPlayer().name} wins!!!`);
+          
         getCurrentPlayer().addPoint();
-        console.log(`Score: ${players[0].name}: ${players[0].getScore()}. ${players[1].name}: ${players[1].getScore()}.`);
+        // delay for UI score update to coincide with banner slide-out
+        setTimeout(() => {
+            GameUI.updatePlayerScores(players[0].getScore(), players[1].getScore());
+            Gameboard.resetBoard();
+            GameUI.updateScreen();
+        }, 3000);
 
-        printNewRound();
         return;
       }
       // If no winner yet...
       else if (!isWinner) {
-        Gameboard.printBoard();
         switchTurns();
-        alertPlayerOfTurn();
+        // alertPlayerOfTurn();
       }
     } else { // if square unavailable, log error, do not place marker or switch turns
       // TODO: After UI built, call a method from future UI handler to display red border flash or similar side effect if square is not empty.
       console.log(`Sorry, that square is already taken. Try again.`);
-      alertPlayerOfTurn();
+      // alertPlayerOfTurn();
     }
   };
 
-  // Initial play game message
-  printNewRound();
+  // Initial board render
+  Gameboard.resetBoard();
 
   return {
     getCurrentPlayer,
-    printNewRound,
-    playRound,
+    updatePlayers,
+    checkForWinner,
     checkForTie,
+    playRound,
   };
 })();
 
+/**
+ * UI Logic
+ */
+const GameUI = (function() {
+  // UI should only need to interact with the core game code via GameController.playRound()!
+  /** 
+   * Need to:
+   * - display title screen to get player names
+   *    - call a GameController fn to update player instances with those names
+   * - display initial board and player names/scores
+   * - display updated board after player move
+   * - display cleared board after win or reset
+   */
+
+  const titleScreen = document.querySelector('.title-screen-container');
+  const gameboardScreen = document.querySelector('.play-screen-container');
+  const boardDiv = document.querySelector('.board');
+
+  const hideTitleScreen = () => {
+    titleScreen.classList.toggle('hidden');
+    titleScreen.setAttribute('aria-hidden', 'true');
+    setTimeout(() => {
+      titleScreen.style.display = 'none';
+    }, 1000);
+    gameboardScreen.setAttribute('aria-hidden', 'false');
+  }
+
+  const updatePlayerNames = (name1, name2) => {
+    GameController.updatePlayers(name1, name2); // share names with controller
+    const playerOneSpan = document.querySelector('.player-one-name');
+    const playerTwoSpan = document.querySelector('.player-two-name');
+    playerOneSpan.innerText = name1;
+    playerTwoSpan.innerText = name2;
+  };
+
+  const updatePlayerScores = (score1, score2) => {
+    const playerOneSpan = document.querySelector('.player-one-score');
+    const playerTwoSpan = document.querySelector('.player-two-score');
+    playerOneSpan.innerText = score1;
+    playerTwoSpan.innerText = score2;
+  };
+
+  const displayRoundResult = (message) => {
+    const alertBanner = document.querySelector('.winner-container');
+    const alertPara = document.querySelector('.winner-alert');
+    alertPara.textContent = `${message}`;
+    alertBanner.classList.add('show');
+
+    setTimeout(() => {
+      alertBanner.classList.remove('show');
+    }, 2500);
+  };
+
+  const setMarkerColor = (marker) => {
+    return marker === 'X' ? 'player-one' : 'player-two';
+  };
+
+  const updateScreen = () => {
+    // Clear the board
+    boardDiv.textContent = '';
+
+    // Get latest board and player state
+    const board = Gameboard.getBoardState();
+    const currentPlayer = GameController.getCurrentPlayer();
+
+    // Display player's turn
+    const currentPlayerSpan = document.querySelector('.current-player');
+    currentPlayerSpan.textContent = `${currentPlayer.name}`;
+
+    // Render board squares
+    board.forEach((row, index) => {
+      const rowDiv = document.createElement('div');
+      rowDiv.classList.add('board-row')
+      rowDiv.dataset.row = index;
+      boardDiv.appendChild(rowDiv);
+
+      row.forEach((cell, index) => {
+        // make buttons for squares because they are clickable
+        const cellBtn = document.createElement('button');
+        cellBtn.classList.add('cell');
+        // data attribute identifies which column the cell is in,
+        // which makes it easier to pass into playRound()
+        cellBtn.dataset.col = index;
+        cellBtn.textContent = cell.getMarker();
+        // set class that controls marker color
+        cellBtn.classList.add(setMarkerColor(cell.getMarker()));
+        rowDiv.appendChild(cellBtn);
+      });
+    });
+  };
+
+  function handleNameSubmit(e) {
+    e.preventDefault();
+
+    const formData = new FormData(this);
+    const playerOneName = formData.get('player-one');
+    const playerTwoName = formData.get('player-two');
+
+    updatePlayerNames(playerOneName, playerTwoName);
+    hideTitleScreen();
+    updateScreen();
+  }
+
+  function handleBoard(e) {
+    const selectedRow = e.target.closest('.board-row').dataset.row;
+    const selectedCol = e.target.dataset.col;
+    // check that col was clicked and not gap between col: 
+    if (!selectedCol) return;
+
+    GameController.playRound(+selectedRow, +selectedCol);
+    updateScreen();
+  }
+
+  // Add event listener to board DOM element and pass handleBoard to it
+  boardDiv.addEventListener('click', handleBoard);
+
+  // Display title screen
+
+  // Get name inputs and update Controller with them
+  document.querySelector('.title-screen-form').addEventListener('submit', handleNameSubmit);
+  // Initial render
+  // updateScreen();
+
+  return {
+    updatePlayerScores,
+    displayRoundResult,
+    updateScreen,
+  }
+})();
+
+
 // Test calls to insert vals at (row, col):
-GameController.playRound(0, 0);
-GameController.playRound(1, 0);
-GameController.playRound(1, 1);
-// GameController.playRound(1, 1); // this is a check for trying an unavailable square
-GameController.playRound(1, 2);
-GameController.playRound(2, 2);
+// GameController.playRound(0, 0);
+// GameController.playRound(1, 0);
+// GameController.playRound(1, 1);
+// // GameController.playRound(1, 1); // this is a check for trying an unavailable square
+// GameController.playRound(1, 2);
+// GameController.playRound(2, 2);
 
 /**
  * Plays to a tie

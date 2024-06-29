@@ -1,13 +1,61 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Tic Tac Toe</title>
-  <link rel="stylesheet" href="style.css">
-</head>
-<body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tic Tac Toe</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="title-screen-container">
+      <h1>tic tac toe</h1>
+      <form class="title-screen-form" method="dialog">
+        <div class="form-row">
+          <label for="player-one">player one:</label>
+          <input id="player-one" name="player-one" type="text" autofocus />
+        </div>
+        <div class="form-row">
+          <label for="player-two">player two:</label>
+          <input id="player-two" name="player-two" type="text" autofocus />
+        </div>
+        <div class="form-row">
+          <button class="start-game" type="submit">start</button>
+        </div>
+      </form>
+    </div>
 
-  <script src="script.js"></script>
-</body>
+    <div class="play-screen-container">
+      <header>
+        <h2>tic tac toe</h2>
+      </header>
+
+      <main class="grid game-main">
+        <div class="turn-container">
+          <p>It's <span class="current-player"></span>'s turn!</p>
+        </div>
+
+        <div class="board"></div>
+
+        <div class="score-container">
+          <h3 class="score-heading">SCORE</h3>
+          <div class="score-row">
+            <p class="player-one-para">
+              <span class="player-one-name">Player 1</span>: 
+              <span class="player-one-score">0</span>
+            </p>
+            <p class="player-two-para">
+              <span class="player-two-name">Player 2</span>: 
+              <span class="player-two-score">0</span>
+            </p>
+          </div>
+        </div>
+
+        <div class="winner-container" role="alert" aria-live="assertive">
+          <p class="winner-alert"></p>
+        </div>
+      </main>
+    </div>
+
+    <script src="script.js"></script>
+  </body>
 </html>
