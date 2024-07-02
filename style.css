@@ -1,5 +1,5 @@
 /* Fonts */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&family=Neonderthaw&family=Nunito:ital,wght@0,200..1000;1,200..1000&family=Playwrite+US+Trad:wght@100..400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&family=Monoton&family=Neonderthaw&family=Nunito:ital,wght@0,200..1000;1,200..1000&family=Playwrite+US+Trad:wght@100..400&display=swap');
 
 /* Modern Reset */
 *,
@@ -79,6 +79,7 @@ h6 {
   --pink-lightest: #F9CCCA;
   --pink-light: #EEA9E3;
   --pink-dark: #D157A7;
+  --blue-lightest: #DFF0FF;
   --midnight-blue: hsl(229, 100%, 7%);
   --midnight-blue-transparent: hsla(229, 100%, 7%. 0.75);
 
@@ -120,7 +121,6 @@ button {
   align-items: center;
   justify-content: center;
 
-  /* background-color: #010a01; */
   background-attachment: scroll;
   background-color: var(--midnight-blue);
   background-image: url("https://cdn.pixabay.com/photo/2017/02/12/12/42/wall-2059909_640.png");
@@ -336,27 +336,75 @@ button.start-game {
   background-size: cover;
 }
 .game-main {
+  /* height: 100vh; */
+  min-height: 100vh;
+
   position: relative;
   overflow: hidden;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2rem;
 }
-h2 {
-  font-size: 7.75rem;
+@keyframes flicker-fast {
+  0%, 9%, 11%, 58% {
+    opacity: .99;
+  }
+  10%, 19.9%, 59%, 100% {
+    opacity: 0.2;
+  }
+}
+@keyframes flicker {
+  0%, 19.999%, 22%, 62.999%, 64%, 64.999%, 70%, 100% {
+    opacity: .99;
+  }
+  9%, 20%, 21.999%, 63%, 63.999%, 65%, 69.999% {
+    opacity: 0.4;
+  }
+}
+.play-screen-heading {
   font-size: clamp(4.5rem, 12ch, 7.75rem);
   font-weight: 400;
   font-family: 'Neonderthaw';
   animation: neon-pulse-blue 1500ms ease-in-out infinite alternate;
+  color: var(--blue-lightest);
+  text-shadow: 
+      0 0 2px #fff,
+      0 0 6px #fff,
+      0 0 9px #fff,
+      0 0 22px var(--neon-blue),
+      0 0 36px var(--neon-blue),
+      0 0 44px var(--neon-blue),
+      0 0 64px var(--neon-blue);
+
+  position: absolute;
+  top: 0;
+}
+.play-screen-heading.animate {
+  animation: flicker-fast 500ms infinite; 
+}
+.play-screen-heading.show-result {
+  top: 2.5rem;
+
   color: var(--pink-lightest);
-  text-shadow: 0 0 5px var(--pink-light),
-    0 0 15px var(--pink-light),
-    0 0 25px var(--pink-light),
-    0 0 50px var(--pink-dark),
-    0 0 75px var(--pink-dark),
-    0 0 100px var(--pink-dark),
-    0 0 150px var(--pink-dark);
+  text-shadow: 
+    0 0 2px var(--pink-lightest),
+    0 0 6px var(--pink-lightest),
+    0 0 9px var(--pink-lightest),
+    0 0 22px var(--pink-dark),
+    0 0 36px var(--pink-dark),
+    0 0 44px var(--pink-dark),
+    0 0 64px var(--pink-dark);
+  font-family: 'Monoton', Arial, Helvetica, sans-serif;
+  font-size: clamp(3.5rem, 10ch, 4.75rem);
+  animation: 3500ms flicker linear infinite;
 }
 .score-container {
-  padding: 1em 0 2em;
+  padding-bottom: 6vh;
   width: 100%;
+
   display: flex;
   flex-direction: column;
   gap: 1em;
@@ -379,16 +427,9 @@ h2 {
 .score-heading, 
 .player-one-para,
 .player-two-para {
-  font-weight: 400;
   animation: neon-pulse-blue 1500ms ease-in-out infinite alternate;
-  color: var(--pink-lightest);
-  text-shadow: 0 0 5px var(--pink-light),
-    0 0 15px var(--pink-light),
-    0 0 25px var(--pink-light),
-    0 0 50px var(--pink-dark),
-    0 0 75px var(--pink-dark),
-    0 0 100px var(--pink-dark),
-    0 0 150px var(--pink-dark);
+  font-weight: 400;
+  color:var(--blue-lightest);
 }
 .player-one-indicator,
 .player-two-indicator {
@@ -405,7 +446,7 @@ h2 {
 
 /* Board */
 .board {
-  margin: 1.5rem auto;
+  margin: 6rem auto 1rem;
   width: min(90%, 450px);
 
   position: relative;
@@ -493,7 +534,7 @@ h2 {
 .cell.player-one {
   text-shadow: 
     0 0 5px #fff,
-    0 0 15px #fff,
+    0 0 15px var(--neon-green),
     0 0 25px var(--neon-green),
     0 0 50px var(--neon-green),
     0 0 75px var(--neon-green),
@@ -512,22 +553,4 @@ h2 {
 }
 .cell:hover {
   cursor: pointer;
-}
-
-/* Winner alert */
-.winner-container {
-  background: rgb(255, 119, 0);
-  width: 100%;
-  padding: 1em;
-  font-size: 2rem;
-
-  position: fixed;
-  top: 50%;
-  right: -100%;
-
-  transform: translateY(-50%);
-  transition: all 400ms ease-in;
-}
-.winner-container.show {
-  right: 0;
 }

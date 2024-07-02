@@ -230,15 +230,35 @@ const GameUI = (function() {
     playerTwoSpan.innerText = score2;
   };
 
+  // const displayRoundResult = (message) => {
+  //   const playScreenHeading = document.querySelector('.play-screen-heading');
+  //   playScreenHeading.classList.remove('show');
+  //   const alertBanner = document.querySelector('.winner-container');
+  //   const alertPara = document.querySelector('.winner-alert');
+  //   alertPara.textContent = `${message}`;
+  //   alertBanner.classList.add('show');
+
+  //   setTimeout(() => {
+  //     alertBanner.classList.remove('show');
+  //     playScreenHeading.classList.add('show');
+  //   }, 2500);
+  // };
+
   const displayRoundResult = (message) => {
-    const alertBanner = document.querySelector('.winner-container');
-    const alertPara = document.querySelector('.winner-alert');
-    alertPara.textContent = `${message}`;
-    alertBanner.classList.add('show');
+    const playScreenHeading = document.querySelector('.play-screen-heading');
+    // playScreenHeading.classList.remove('show');
+    playScreenHeading.classList.add('animate');
+    
+    setTimeout(() => {
+      playScreenHeading.textContent = `${message}`;
+      playScreenHeading.classList.remove('animate');
+      playScreenHeading.classList.add('show-result');
+    }, 1000);
 
     setTimeout(() => {
-      alertBanner.classList.remove('show');
-    }, 2500);
+      playScreenHeading.textContent = `tic tac toe`;
+      playScreenHeading.classList.remove('show-result');
+    }, 4500);
   };
 
   const setMarkerColor = (marker) => {
@@ -308,14 +328,13 @@ const GameUI = (function() {
     if (gameState.isValidMove) {
       updateScreen();
       if (gameState.isWinner) {
-        // displayWinnerMessage(gameState.currentPlayer);
-        displayRoundResult(`${gameState.currentPlayer.name} wins!!!`);
+        displayRoundResult(`${gameState.currentPlayer.name.toUpperCase()} WINS!`);
         // delay for score update + board reset v slider timing
         setTimeout(() => {
           updatePlayerScores(GameController.getPlayerScores()[0], GameController.getPlayerScores()[1]);
           Gameboard.resetBoard();
           updateScreen();
-        }, 2000);
+        }, 3500);
 
         return;
       } else if (gameState.isTie) {
