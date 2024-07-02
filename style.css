@@ -443,6 +443,22 @@ button.start-game {
 .player-two-indicator.show {
   display: block;
 }
+.player-one-indicator {
+  text-shadow: 
+    0 0 5px #fff,
+    0 0 15px var(--neon-green),
+    0 0 25px var(--neon-green),
+    0 0 50px var(--neon-green),
+    0 0 75px var(--neon-green);
+}
+.player-two-indicator {
+  text-shadow: 
+    0 0 5px #fff,
+    0 0 15px var(--neon-pink),
+    0 0 25px var(--neon-pink),
+    0 0 50px var(--neon-pink),
+    0 0 75px var(--neon-pink);
+}
 
 /* Board */
 .board {
